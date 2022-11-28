@@ -33,53 +33,58 @@ PACKAGE="fapolicyd"
 
 rlJournalStart
     rlPhaseStartSetup
-        rlAssertRpm $PACKAGE
-        rlRun "TmpDir=\$(mktemp -d)" 0 "Creating tmp directory"
-        rlRun "pushd $TmpDir"
+        rlRun "rlImport --all" || rlDie 'cannot continue'
+
+        CleanupRegister 'rlRun "RpmSnapshotRevert"; rlRun "RpmSnapshotDiscard"'
+        rlRun "RpmSnapshotCreate"
+        rlRun "rpm -q lcov || epel yum install -y lcov"
+
+        rlRun "mkdir ~/code_cov_setup"
+        rlRun "pushd ~/code_cov_setup"
+
+        rlFetchSrcForInstalled "${PACKAGE}"
+        rlRun "dnf builddep -y --enablerepo='*' ${PACKAGE}*"
     rlPhaseEnd
 
-    rlPhaseStartTest "Instalation"
-        rlRun "dnf install -y --enablerepo='epel' lcov rpm-build"
-        rlRun "dnf download --source fapolicyd"
-        rlRun "dnf builddep -y --enablerepo='*' fapolicyd*"
-    rlPhaseEnd
 
     rlPhaseStartTest "Rebuild"
-        # rm -rf rpmbuild/
-        # rpm -i fapolicyd*.src.rpm
-        # rpmbuild -ba rpmbuild/SPECS/fapolicyd.spec 2>&1 | tee build_log_orig.txt
+        CleanupRegister 'rlRun "rlFileRestore"'
+        rlFileBackup --clean '~/rpmbuild'
 
-        rm -rf ~/rpmbuild/
-        rlRun "rpm -i fapolicyd*.src.rpm"
+        rlRun "rpm -i ${PACKAGE}*.src.rpm"
+        rlRun "pushd ~/rpmbuild"
+
         export CFLAGS="$(rpm --eval %{optflags}) -fprofile-arcs -ftest-coverage"
         export LDFLAGS="$(rpm --eval %{build_ldflags}) -lgcov -coverage"
 
-        rlRun "sed -i '/^Release: /s/%/_codecoverage%/' ~/rpmbuild/SPECS/fapolicyd.spec"
-        rlRun -s "rpmbuild -ba ~/rpmbuild/SPECS/fapolicyd.spec"
+        rlRun "sed -i '/^Release: /s/%/_codecoverage%/' SPECS/${PACKAGE}.spec"
+        rlRun "rpmbuild -ba SPECS/${PACKAGE}.spec"
 
-        rlRun "dnf install -y ~/rpmbuild/RPMS/x86_64/fapolicyd-*_codecoverage* ~/rpmbuild/RPMS/noarch/fapolicyd-*_codecoverage*"
+#        rlRun "dnf install -y RPMS/x86_64/${PACKAGE}-*_codecoverage* RPMS/noarch/${PACKAGE}-*_codecoverage*"
+        rlRun "popd"
     rlPhaseEnd
+
 
     rlPhaseStartTest "lcov setup and run app"
-        dir=$(dirname $(find ~/rpmbuild -name fapolicyd))
-        rlRun "lcov --directory $dir --zerocounters"
-        rlRun "$dir/fapolicyd --debug-deny"
+        dir=$(dirname $(find ~/rpmbuild -name ${PACKAGE}))
+        rlRun "lcov --directory ${dir} --zerocounters"
+        rlWatchdog "$dir/${PACKAGE} --debug-deny" 3
     rlPhaseEnd
 
+
     rlPhaseStartTest "Gather results"
-        rlRun "lcov --directory $dir --capture --initial --output-file fapolicyd_base.info"
-        #lcov --directory $dir --capture --output-file fapolicyd_test.info
+        rlRun "lcov --directory ${dir} --capture --initial --output-file fapolicyd_base.info"
         rlRun "mkdir html_report"
         rlRun "pushd html_report"
         rlRun "genhtml ../fapolicyd_base.info"
         rlRun "tar cvzf output.tgz *"
-        rlLog "$(whoami)@$(hostname):$(readlink -f output.tgz)"
         rlRun "popd"
     rlPhaseEnd
 
+
     rlPhaseStartCleanup
+        CleanupDo
         rlRun "popd"
-        rlRun "rm -r $TmpDir" 0 "Removing tmp directory"
     rlPhaseEnd
-#rlJournalPrintText
+rlJournalPrintText
 rlJournalEnd

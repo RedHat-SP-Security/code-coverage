@@ -1,0 +1,3 @@
+contact: Martin Zelený <mzeleny@redhat.com>
+framework: beakerlib
+test: ./test.sh

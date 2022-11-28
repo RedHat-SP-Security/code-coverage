@@ -1,0 +1,5 @@
+summary: Measure code test coverage
+discover:
+    how: fmf
+execute:
+    how: tmt
