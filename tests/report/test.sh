@@ -40,45 +40,22 @@ rlJournalStart
 #        rlRun "RpmSnapshotCreate"
         rlRun "rpm -q lcov || epel yum install -y lcov"
 
-#        rlRun "mkdir ~/code_cov_setup"
 #        rlRun "pushd ~/code_cov_setup"
-
-        rlFetchSrcForInstalled "${PACKAGE}"
-        rlRun "dnf builddep -y --enablerepo='*' ${PACKAGE}*"
     rlPhaseEnd
 
 
-    rlPhaseStartTest "Rebuild"
-#        CleanupRegister 'rlRun "rlFileRestore"'
-#        rlFileBackup --clean '~/rpmbuild'
-
-        rlRun "rpm -i ${PACKAGE}*.src.rpm"
-        rlRun "pushd ~/rpmbuild"
-
-        export CFLAGS="$(rpm --eval %{optflags}) -fprofile-arcs -ftest-coverage"
-        export LDFLAGS="$(rpm --eval %{build_ldflags}) -lgcov -coverage"
-
-        rlRun "sed -i '/^Release: /s/%/_codecoverage%/' SPECS/${PACKAGE}.spec"
-        rlRun "rpmbuild -ba SPECS/${PACKAGE}.spec"
-
-#        rlRun "RpmSnapshotRevert"
-#        rlRun "RpmSnapshotDiscard"
-#        rlRun "RpmSnapshotCreate"
-
-        rlRun "dnf install -y RPMS/x86_64/${PACKAGE}-*_codecoverage* RPMS/noarch/${PACKAGE}-*_codecoverage*"
+    rlPhaseStartTest "Gather results"
+        rlRun "lcov --directory ${DIR} --capture --initial --output-file fapolicyd_base.info"
+        rlRun "mkdir html_report"
+        rlRun "pushd html_report"
+        rlRun "genhtml ../fapolicyd_base.info"
+        rlRun "tar cvzf output.tgz *"
         rlRun "popd"
-    rlPhaseEnd
-
-
-    rlPhaseStartTest "lcov setup and run app"
-        rlRun "lcov --directory ${DIR} --zerocounters"
-        rlWatchdog "fapolicyd --debug-deny" 3
     rlPhaseEnd
 
 
 #    rlPhaseStartCleanup
 ##        CleanupDo
-##        rlRun "rlFileRestore"
 ##        rlRun "popd"
 #    rlPhaseEnd
 rlJournalPrintText
