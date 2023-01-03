@@ -1,4 +1,4 @@
-summary: Setup task for enabling measuring code test coverage
+summary: Task reporting code test coverage
 require+:
   - fapolicyd
   - library(epel/epel)

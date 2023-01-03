@@ -11,15 +11,31 @@ discover:
     url: https://github.com/RedHat-SP-Security/tests.git
     filter: component:fapolicyd
 
-  - name: fapolicyd downstream
-    how: fmf
-    url: git://pkgs.devel.redhat.com/tests/fapolicyd
-    filter: component:fapolicyd
+#  - name: fapolicyd downstream
+#    how: fmf
+#    url: git://pkgs.devel.redhat.com/tests/fapolicyd
+#    filter: component:fapolicyd
 
   - name: Report
     how: fmf
     test:
       - /tests/report
+
+prepare:
+    - name: Add repositories
+      how: shell
+      script:
+        - dnf config-manager --enable beaker-tasks
+        - wget -t 3 -T 180 -w 20 --waitretry=30 --no-check-certificate --progress=dot:giga -O /etc/yum.repos.d/beakerlib-testing.repo http://nest.test.redhat.com/mnt/qa/beakerlib-testing-repos/beakerlib-testing.repo
+        - dnf config-manager --setopt=*.sslverify=0 --setopt=*.gpgcheck=0 --setopt=*.skip_if_unavailable=1 --save
+        - dnf install -y --enablerepo beakerli\* beakerlib
+        - dnf install -y --enablerepo beakerli\* beakerlib-redhat
+        - dnf update -y --enablerepo beakerli\*-testing beakerlib
+        - dnf update -y --enablerepo beakerli\*-testing beakerlib-redhat
+
+    - name: Enable buildroot
+      how: shell
+      script: curl -Lk http://pkgs.devel.redhat.com/cgit/tests/distribution/plain/install/rhel-buildroot/runtest.sh | bash
 
 execute:
     how: tmt

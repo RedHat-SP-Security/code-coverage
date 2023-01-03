@@ -72,7 +72,6 @@ rlJournalStart
 
     rlPhaseStartTest "lcov setup and run app"
         rlRun "lcov --directory ${DIR} --zerocounters"
-        rlWatchdog "fapolicyd --debug-deny" 3
     rlPhaseEnd
 
 
