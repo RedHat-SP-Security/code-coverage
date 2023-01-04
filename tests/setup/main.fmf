@@ -2,8 +2,8 @@ summary: Setup task for enabling measuring code test coverage
 require+:
   - fapolicyd
   - library(epel/epel)
-  - library(rpm/snapshot)
-  - library(ControlFlow/Cleanup)
+#  - library(rpm/snapshot)
+#  - library(ControlFlow/Cleanup)
   - rpm-build
 recommend+:
   - lcov

@@ -38,13 +38,13 @@ rlJournalStart
 
 #        CleanupRegister 'rlRun "RpmSnapshotRevert"; rlRun "RpmSnapshotDiscard"'
 #        rlRun "RpmSnapshotCreate"
-        rlRun "rpm -q lcov || epel yum install -y lcov"
+        rlRun "rpm -q lcov || epel yum install -y lcov &> /dev/null"
 
 #        rlRun "mkdir ~/code_cov_setup"
 #        rlRun "pushd ~/code_cov_setup"
 
         rlFetchSrcForInstalled "${PACKAGE}"
-        rlRun "dnf builddep -y --enablerepo='*' ${PACKAGE}*"
+        rlRun "dnf builddep -y --enablerepo='*' ${PACKAGE}* &> /dev/null"
     rlPhaseEnd
 
 
@@ -59,13 +59,13 @@ rlJournalStart
         export LDFLAGS="$(rpm --eval %{build_ldflags}) -lgcov -coverage"
 
         rlRun "sed -i '/^Release: /s/%/_codecoverage%/' SPECS/${PACKAGE}.spec"
-        rlRun "rpmbuild -ba SPECS/${PACKAGE}.spec"
+        rlRun "rpmbuild -ba SPECS/${PACKAGE}.spec &> /dev/null"
 
 #        rlRun "RpmSnapshotRevert"
 #        rlRun "RpmSnapshotDiscard"
 #        rlRun "RpmSnapshotCreate"
 
-        rlRun "dnf install -y RPMS/x86_64/${PACKAGE}-*_codecoverage* RPMS/noarch/${PACKAGE}-*_codecoverage*"
+        rlRun "dnf install -y RPMS/x86_64/${PACKAGE}-*_codecoverage* RPMS/noarch/${PACKAGE}-*_codecoverage* &> /dev/null"
         rlRun "popd"
     rlPhaseEnd
 
@@ -80,5 +80,5 @@ rlJournalStart
 ##        rlRun "rlFileRestore"
 ##        rlRun "popd"
 #    rlPhaseEnd
-rlJournalPrintText
+#rlJournalPrintText
 rlJournalEnd

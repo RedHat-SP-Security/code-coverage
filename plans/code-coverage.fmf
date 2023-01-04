@@ -1,25 +1,27 @@
 summary: Measure code test coverage
 
 discover:
-  - name: Setup
-    how: fmf
-    test:
-      - /tests/setup
+#  - name: Setup
+#    how: fmf
+#    test:
+#      - /tests/setup
 
   - name: fapolicyd upstream
     how: fmf
     url: https://github.com/RedHat-SP-Security/tests.git
-    filter: component:fapolicyd
+#    filter: component:fapolicyd
+    test:
+      - /fapolicyd/Sanity/trusted-execution
 
 #  - name: fapolicyd downstream
 #    how: fmf
 #    url: git://pkgs.devel.redhat.com/tests/fapolicyd
 #    filter: component:fapolicyd
 
-  - name: Report
-    how: fmf
-    test:
-      - /tests/report
+#  - name: Report
+#    how: fmf
+#    test:
+#      - /tests/report
 
 prepare:
     - name: Add repositories

@@ -58,5 +58,5 @@ rlJournalStart
 ##        CleanupDo
 ##        rlRun "popd"
 #    rlPhaseEnd
-rlJournalPrintText
+#rlJournalPrintText
 rlJournalEnd
