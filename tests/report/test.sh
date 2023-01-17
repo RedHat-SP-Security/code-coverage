@@ -29,34 +29,29 @@
 . /usr/bin/rhts-environment.sh || exit 1
 . /usr/share/beakerlib/beakerlib.sh || exit 1
 
-PACKAGE="fapolicyd"
-DIR="/usr/sbin"
 
 rlJournalStart
     rlPhaseStartSetup
         rlRun "rlImport --all" || rlDie 'cannot continue'
-
-#        CleanupRegister 'rlRun "RpmSnapshotRevert"; rlRun "RpmSnapshotDiscard"'
-#        rlRun "RpmSnapshotCreate"
-        rlRun "rpm -q lcov || epel yum install -y lcov"
-
-#        rlRun "pushd ~/code_cov_setup"
     rlPhaseEnd
 
 
     rlPhaseStartTest "Gather results"
-        rlRun "lcov --directory ${DIR} --capture --initial --output-file fapolicyd_base.info"
-        rlRun "mkdir html_report"
-        rlRun "pushd html_report"
-        rlRun "genhtml ../fapolicyd_base.info"
-        rlRun "tar cvzf output.tgz *"
-        rlRun "popd"
+        BINARY="/root/rpmbuild/BUILD/scrub-2.6.1/src/scrub"
+        APPDIR=$(dirname $BINARY)
+
+        rlRun "lcov --directory ${APPDIR} --capture --output-file tested.info"
+
+        rlRun "mkdir web-report"
+        rlRun "genhtml --output-directory web-report tested.info"
+        rlRun "tar cvzf report.tgz web-report/*"
+
+        echo "scp root@$(hostname):$(readlink -f report.tgz) ."
+        PS1="\[\e[1;31m\]$(grep -o '[0-9.]\+' /etc/redhat-release)\[\e[0m\] " bash
     rlPhaseEnd
 
 
 #    rlPhaseStartCleanup
-##        CleanupDo
-##        rlRun "popd"
 #    rlPhaseEnd
 #rlJournalPrintText
 rlJournalEnd

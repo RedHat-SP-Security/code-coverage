@@ -29,19 +29,13 @@
 . /usr/bin/rhts-environment.sh || exit 1
 . /usr/share/beakerlib/beakerlib.sh || exit 1
 
-PACKAGE="fapolicyd"
-DIR="/usr/sbin"
+PACKAGE="scrub"
 
 rlJournalStart
     rlPhaseStartSetup
         rlRun "rlImport --all" || rlDie 'cannot continue'
-
-#        CleanupRegister 'rlRun "RpmSnapshotRevert"; rlRun "RpmSnapshotDiscard"'
-#        rlRun "RpmSnapshotCreate"
         rlRun "rpm -q lcov || epel yum install -y lcov &> /dev/null"
 
-#        rlRun "mkdir ~/code_cov_setup"
-#        rlRun "pushd ~/code_cov_setup"
 
         rlFetchSrcForInstalled "${PACKAGE}"
         rlRun "dnf builddep -y --enablerepo='*' ${PACKAGE}* &> /dev/null"
@@ -49,36 +43,28 @@ rlJournalStart
 
 
     rlPhaseStartTest "Rebuild"
-#        CleanupRegister 'rlRun "rlFileRestore"'
-#        rlFileBackup --clean '~/rpmbuild'
-
         rlRun "rpm -i ${PACKAGE}*.src.rpm"
         rlRun "pushd ~/rpmbuild"
 
         export CFLAGS="$(rpm --eval %{optflags}) -fprofile-arcs -ftest-coverage"
         export LDFLAGS="$(rpm --eval %{build_ldflags}) -lgcov -coverage"
 
-        rlRun "sed -i '/^Release: /s/%/_codecoverage%/' SPECS/${PACKAGE}.spec"
-        rlRun "rpmbuild -ba SPECS/${PACKAGE}.spec &> /dev/null"
+        rlRun "sed -i '/^Release:/s/%/_codecoverage%/' SPECS/${PACKAGE}.spec"
+        rlRun "rpmbuild -ba SPECS/${PACKAGE}.spec"
 
-#        rlRun "RpmSnapshotRevert"
-#        rlRun "RpmSnapshotDiscard"
-#        rlRun "RpmSnapshotCreate"
-
-        rlRun "dnf install -y RPMS/x86_64/${PACKAGE}-*_codecoverage* RPMS/noarch/${PACKAGE}-*_codecoverage* &> /dev/null"
-        rlRun "popd"
+        rlRun "find RPMS -name '*codecoverage*.rpm' -exec dnf install -y {} +"
     rlPhaseEnd
 
 
     rlPhaseStartTest "lcov setup and run app"
-        rlRun "lcov --directory ${DIR} --zerocounters"
+        BINARY="/root/rpmbuild/BUILD/scrub-2.6.1/src/scrub"
+        APPDIR=$(dirname $BINARY)
+        rlRun "lcov --directory ${APPDIR} --zerocounters"
     rlPhaseEnd
 
 
-#    rlPhaseStartCleanup
-##        CleanupDo
-##        rlRun "rlFileRestore"
-##        rlRun "popd"
-#    rlPhaseEnd
+    rlPhaseStartCleanup
+       rlRun "popd"
+    rlPhaseEnd
 #rlJournalPrintText
 rlJournalEnd
