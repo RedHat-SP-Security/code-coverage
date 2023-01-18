@@ -29,16 +29,14 @@
 . /usr/bin/rhts-environment.sh || exit 1
 . /usr/share/beakerlib/beakerlib.sh || exit 1
 
-PACKAGE="scrub"
-
 rlJournalStart
     rlPhaseStartSetup
         rlRun "rlImport --all" || rlDie 'cannot continue'
         rlRun "rpm -q lcov || epel yum install -y lcov &> /dev/null"
 
-
-        rlFetchSrcForInstalled "${PACKAGE}"
-        rlRun "dnf builddep -y --enablerepo='*' ${PACKAGE}* &> /dev/null"
+        rlRun "NVR=$(dnf repoquery --quiet --whatprovides ${PACKAGE} --nvr)"
+        rlRpmDownload --source ${NVR}
+        rlRun "dnf builddep -y --enablerepo='*' ${PACKAGE}*.src.rpm &> /dev/null"
     rlPhaseEnd
 
 
@@ -52,14 +50,7 @@ rlJournalStart
         rlRun "sed -i '/^Release:/s/%/_codecoverage%/' SPECS/${PACKAGE}.spec"
         rlRun "rpmbuild -ba SPECS/${PACKAGE}.spec"
 
-        rlRun "find RPMS -name '*codecoverage*.rpm' -exec dnf install -y {} +"
-    rlPhaseEnd
-
-
-    rlPhaseStartTest "lcov setup and run app"
-        BINARY="/root/rpmbuild/BUILD/scrub-2.6.1/src/scrub"
-        APPDIR=$(dirname $BINARY)
-        rlRun "lcov --directory ${APPDIR} --zerocounters"
+        rlRun "find RPMS -name '*codecoverage*.rpm' ! -name '*debug*' -exec dnf install -y {} +" 0 "Find and install rebuilt RPMs"
     rlPhaseEnd
 
 

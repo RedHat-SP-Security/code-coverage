@@ -1,6 +1,5 @@
 summary: Setup task for enabling measuring code test coverage
 require+:
-  - scrub
   - library(epel/epel)
 #  - library(rpm/snapshot)
 #  - library(ControlFlow/Cleanup)

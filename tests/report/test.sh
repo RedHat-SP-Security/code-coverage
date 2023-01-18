@@ -29,17 +29,16 @@
 . /usr/bin/rhts-environment.sh || exit 1
 . /usr/share/beakerlib/beakerlib.sh || exit 1
 
+APPDIR="/root/rpmbuild/BUILD"
 
 rlJournalStart
     rlPhaseStartSetup
         rlRun "rlImport --all" || rlDie 'cannot continue'
+        rlRun "pushd /root/rpmbuild"
     rlPhaseEnd
 
 
     rlPhaseStartTest "Gather results"
-        BINARY="/root/rpmbuild/BUILD/scrub-2.6.1/src/scrub"
-        APPDIR=$(dirname $BINARY)
-
         rlRun "lcov --directory ${APPDIR} --capture --output-file tested.info"
 
         rlRun "mkdir web-report"
@@ -47,11 +46,11 @@ rlJournalStart
         rlRun "tar cvzf report.tgz web-report/*"
 
         echo "scp root@$(hostname):$(readlink -f report.tgz) ."
-        PS1="\[\e[1;31m\]$(grep -o '[0-9.]\+' /etc/redhat-release)\[\e[0m\] " bash
     rlPhaseEnd
 
 
-#    rlPhaseStartCleanup
-#    rlPhaseEnd
+    rlPhaseStartCleanup
+        rlRun "popd"
+    rlPhaseEnd
 #rlJournalPrintText
 rlJournalEnd

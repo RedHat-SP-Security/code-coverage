@@ -6,16 +6,14 @@ discover:
     test:
       - /tests/setup
 
-#  - name: fapolicyd upstream
-#    how: fmf
-#    url: https://github.com/RedHat-SP-Security/tests.git
-##    filter: component:fapolicyd
-#    test:
-#      - /fapolicyd/Sanity/trusted-execution
-
-  - name: scrub tests
+  - name: Upstream
     how: fmf
-    url: git://pkgs.devel.redhat.com/tests/scrub
+    url: https://github.com/RedHat-SP-Security/tests.git
+    filter: component:${PACKAGE}
+
+  - name: Downstream
+    how: fmf
+    url: git://pkgs.devel.redhat.com/tests/${PACKAGE}
 
   - name: Report
     how: fmf
